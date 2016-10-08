@@ -1,0 +1,272 @@
+/**
+ *全局引用JS文件
+ **/
+(function($, ow) {
+	/**
+     * 取得url中页面名称
+     * @param {String} url
+     */
+    var getUrlName = function(url){
+    	url = url.split("/");
+    	url = url[url.length-1];
+    	url = url.split(".");
+    	return url[0];
+    }
+	
+	var triggerPreload = function(webview) {
+		if (!webview.preloaded) {
+			$.fire(webview, 'preload');
+			var list = webview.children();
+			for (var i = 0; i < list.length; i++) {
+				$.fire(list[i], 'preload');
+			}
+			webview.preloaded = true;
+		}
+	};
+	var trigger = function(webview, eventType, timeChecked) {
+		if (timeChecked) {
+			if (!webview[eventType + 'ed']) {
+				$.fire(webview, eventType);
+				var list = webview.children();
+				for (var i = 0; i < list.length; i++) {
+					$.fire(list[i], eventType);
+				}
+				webview[eventType + 'ed'] = true;
+			}
+		} else {
+			$.fire(webview, eventType);
+			var list = webview.children();
+			for (var i = 0; i < list.length; i++) {
+				$.fire(list[i], eventType);
+			}
+		}
+
+	};
+	
+	
+	/**
+	 * 根据配置信息创建一个webview
+	 * @param {type} options
+	 * @param {type} isCreate
+	 * @returns {webview}
+	 */
+	ow.createWindow = function(options, isCreate) {
+		if (!window.plus) {
+			return;
+		}
+		var id = options.id || options.url;
+		var webview;
+		if (options.preload) {//创建预加载页面
+			if ($.webviews[id] && $.webviews[id].webview.getURL()) { //已经cache
+				webview = $.webviews[id].webview;
+			} else { //新增预加载窗口
+				//preload
+				//判断是否携带createNew参数，默认为false
+				if (options.createNew !== true) {
+					webview = plus.webview.getWebviewById(id);
+				}
+
+				//之前没有，那就新创建	
+				if (!webview) {
+					webview = plus.webview.create(options.url, id, $.windowOptions(options.styles), $.extend({
+						preload: true
+					}, options.extras));
+					if (options.subpages) {
+						$.each(options.subpages, function(index, subpage) {
+							var subpageId = subpage.id || subpage.url;
+							if (subpageId) { //过滤空对象
+								var subWebview = plus.webview.getWebviewById(subpageId);
+								if (!subWebview) { //如果该webview不存在，则创建
+									subWebview = plus.webview.create(subpage.url, subpageId, $.windowOptions(subpage.styles), $.extend({
+										preload: true
+									}, subpage.extras));
+								}
+								webview.append(subWebview);
+							}
+						});
+					}
+				}
+			}
+
+			//TODO 理论上，子webview也应该计算到预加载队列中，但这样就麻烦了，要退必须退整体，否则可能出现问题；
+			$.webviews[id] = {
+				webview: webview, //目前仅preload的缓存webview
+				preload: true,
+				show: $.showOptions(options.show),
+				afterShowMethodName: options.afterShowMethodName //就不应该用evalJS。应该是通过事件消息通讯
+			};
+			//索引该预加载窗口
+			var preloads = $.data.preloads;
+			var index = preloads.indexOf(id);
+			if (~index) { //删除已存在的(变相调整插入位置)
+				preloads.splice(index, 1);
+			}
+			preloads.push(id);
+			if (preloads.length > $.options.preloadLimit) {
+				//先进先出
+				var first = $.data.preloads.shift();
+				var webviewCache = $.webviews[first];
+				if (webviewCache && webviewCache.webview) {
+					//需要将自己打开的所有页面，全部close；
+					//关闭该预加载webview	
+					$.closeAll(webviewCache.webview);
+				}
+				//删除缓存
+				delete $.webviews[first];
+			}
+		} else {
+			if (isCreate !== false) { //直接创建非预加载窗口
+				webview = plus.webview.create(options.url, id, $.windowOptions(options.styles), options.extras);
+				if (options.subpages) {
+					$.each(options.subpages, function(index, subpage) {
+						var subpageId = subpage.id || subpage.url;
+						var subWebview = plus.webview.getWebviewById(subpageId);
+						if (!subWebview) {
+							subWebview = plus.webview.create(subpage.url, subpageId, $.windowOptions(subpage.styles), subpage.extras);
+						}
+						webview.append(subWebview);
+					});
+				}
+			}
+		}
+		return webview;
+	};
+	
+	/**
+	 * 预加载
+	 */
+	ow.preload = function(options) {
+		//调用预加载函数，不管是否传递preload参数，强制变为true
+		if (!options.preload) {
+			options.preload = true;
+		}
+		return ow.createWindow(options);
+	};
+	
+	/**
+	 * 打开新窗口
+	 * @param {string} url 要打开的页面地址
+	 * @param {string} id 指定页面ID
+	 * @param {object} options 可选:参数,等待,窗口,显示配置,头部页面地址{params:{},waiting:{},styles:{},show:{},headPage:{}}
+	 */
+	ow.openWindow = function(url, id, options) {
+		if (typeof url === 'object') {
+			options = url;
+			url = options.url;
+			id = options.id || getUrlName(url);
+		} else {
+			if (typeof id === 'object') {
+				options = id;
+				id = url;
+			} else {
+				id = id || getUrlName(url);
+			}
+		}
+		if (!$.os.plus) {
+			//TODO 先临时这么处理：手机上顶层跳，PC上parent跳
+			if ($.os.ios || $.os.android) {
+				window.top.location.href = url;
+			} else {
+				window.parent.location.href = url;
+			}
+			return;
+		}
+		if (!window.plus) {
+			return;
+		}
+		options = options || {};
+		var params = options.params || {};
+		var webview = null,
+			webviewCache = null,
+			nShow, nWaiting;
+
+		if ($.webviews[id]) {
+			webviewCache = $.webviews[id];
+			//webview真实存在，才能获取
+			if (plus.webview.getWebviewById(id)) {
+				webview = webviewCache.webview;
+			}
+		}
+
+		if (webviewCache && webview) { //已缓存
+			//每次show都需要传递动画参数；
+			//预加载的动画参数优先级：openWindow配置>preloadPages配置>mui默认配置；
+			nShow = webviewCache.show;
+			nShow = options.show ? $.extend(nShow, options.show) : nShow;
+			webview.show(nShow.aniShow, nShow.duration, function() {
+				triggerPreload(webview);
+				trigger(webview, 'pagebeforeshow', false);
+			});
+
+			webviewCache.afterShowMethodName && webview.evalJS(webviewCache.afterShowMethodName + '(\'' + JSON.stringify(params) + '\')');
+			return webview;
+		} else { //新窗口
+			if (options.createNew !== true) {//如果同样ID存在不创建新窗口
+				webview = plus.webview.getWebviewById(id);
+				if (webview) { //如果已存在
+					//判断是否是新加载页面请求
+					if(getUrlName(webview.getURL())!=getUrlName(url)){
+						webview.loadURL(url);
+					}
+					nShow = $.showOptions(options.show);
+					nShow.autoShow && webview.show(nShow.aniShow, nShow.duration, function() {
+						triggerPreload(webview);
+						trigger(webview, 'pagebeforeshow', false);
+					});
+					return webview;
+				} else {
+					if (!url) {
+						throw new Error('webview[' + id + '] does not exist');
+					}
+				}
+			}
+			//显示waiting
+			var waitingConfig = $.waitingOptions(options.waiting);
+			if (waitingConfig.autoShow) {
+				nWaiting = plus.nativeUI.showWaiting(waitingConfig.title, waitingConfig.options);
+			}
+			//创建页面
+			options = $.extend(options, {
+				id: id,
+				url: url
+			});
+
+			webview = ow.createWindow(options);
+			//显示
+			nShow = $.showOptions(options.show);
+			if (nShow.autoShow) {
+				var showWebview = function() {
+					//关闭等待框
+					if (nWaiting) {
+						nWaiting.close();
+					}
+					//显示页面
+					webview.show(nShow.aniShow, nShow.duration, function() {
+						triggerPreload(webview);
+						trigger(webview, 'pagebeforeshow', false);
+					});
+					webview.showed = true;
+					options.afterShowMethodName && webview.evalJS(options.afterShowMethodName + '(\'' + JSON.stringify(params) + '\')');
+				};
+				if (!url) {
+					showWebview();
+				} else {
+					webview.addEventListener("loaded", showWebview, false);
+				}
+			}
+		}
+		return webview;
+	};
+	window.addEventListener('preload', function() {
+		//处理预加载部分
+		var webviews = $.options.preloadPages || [];
+		$.plusReady(function() {
+			$.each(webviews, function(index, webview) {
+				$.createWindow($.extend(webview, {
+					preload: true
+				}));
+			});
+
+		});
+	});
+}(mui, window.app = {}));

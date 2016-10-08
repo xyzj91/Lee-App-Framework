@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<style>
+			.index{ width: 100%; float: left; padding-top: 50px; text-align: center;}
+			body{ background: #41CEA9;}
+		</style>
+	</head>
+
+	<body>
+		<span class="index">content1-tab</span>
+		<script type="text/javascript" src="../js/sea.js"></script>
+		<script type="text/javascript" src="../js/main.js" ></script>
+		<script type="text/javascript" src="../js/sql.indexdb.js" ></script>
+		<script>
+		seajs.use(["mui"],function(mui){
+			mui.init();
+			mui('.index')[0].addEventListener("tap",function(){
+				sql.insert().into("userlist",{youtu_id:10441157,nickname:"dage",name:"lile",age:26}).start(function(res){
+					if(res.status){
+						mui.alert("添加成功");
+					}else{
+						mui.alert("添加失败");
+					}
+				});
+			});
+		});
+		
+//		seajs.use(["app"],function(app){
+//				app.init({
+//		            initCbk:function(){
+//			            	mui('.index')[0].addEventListener("tap",function(){
+////								var option = app.getOptions();
+////								option.id = "content3";
+////								option.url = "_www/app/content3.html";
+////								option.title = "测试";
+////								app.locationHref(option);
+////								sql.select(["name","age"]).from("lile").where("id=1").start();
+//								sql.insert().into("userlist",{name:"lile",age:26}).start();
+////								sql.delete().from("lile").where("id=1").start();
+////								sql.update("lile").set({name:"lile1",age:18}).start();
+//							});
+//		                },
+//		            lastpostCbk:function(){
+//		                },
+//		            eventCbk:function(){
+//		                },
+//		            broadCbk:function(){
+//		                },
+//		            dataRequestCbk:function(){
+//		            	app.printLog(data,true);
+//						console.log("上一个页面接收到响应值");
+//		                },          
+//		        });
+//				
+//			});
+			
+		</script>
+	</body>
+
+</html>

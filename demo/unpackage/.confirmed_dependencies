@@ -1,0 +1,170 @@
+{
+  "index.html": {
+    "resources": [
+      "js/app.js",
+      "js/mui.min.js",
+      "css/mui.min.css",
+      "fonts/mui.ttf",
+      "app/content1.html",
+      "app/content1-tab.html",
+      "js/app.utils.js",
+      "js/config.js",
+      "js/sea.js",
+      "/js/mui.js",
+      "js/mui.js",
+      "js/apputils.js",
+      "js/language.js",
+      "js/main.js"
+    ],
+    "refer": [
+      "app/template.html",
+      "app/content1.html",
+      "app/content3.html",
+      "app/content4-tab.html",
+      "app/content2-tab.html",
+      "app/content3-tab.html",
+      "app/content1-tab.html",
+      "app/template-header.html",
+      "app/content2.html",
+      "app/content4.html",
+      "app/content3-need-header.html",
+      "app/content3-quickOpen.html",
+      "app/indexdbdemo.html"
+    ]
+  },
+  "app/template.html": {
+    "resources": [
+      "js/app.js",
+      "js/mui.min.js",
+      "css/mui.min.css"
+    ]
+  },
+  "app/content1.html": {
+    "resources": [
+      "js/app.js",
+      "js/mui.min.js",
+      "css/mui.min.css"
+    ]
+  },
+  "app/content2-tab.html": {
+    "resources": [
+      "js/app.js",
+      "js/mui.min.js",
+      "css/mui.min.css",
+      "js/app.utils.js",
+      "js/config.js"
+    ],
+    "refer": [
+      "app/content4.html",
+      "app/template-header.html",
+      "app/content2.html"
+    ]
+  },
+  "app/content1-tab.html": {
+    "resources": [
+      "js/app.js",
+      "js/mui.min.js",
+      "css/mui.min.css",
+      "js/app.utils.js",
+      "js/config.js",
+      "js/sea.js",
+      "js/language.js",
+      "js/main.js",
+      "js/sql.indexdb.js",
+      "js/mui.js"
+    ],
+    "refer": [
+      "app/content3.html",
+      "app/template-header.html",
+      "app/content3-alone.html"
+    ]
+  },
+  "app/content4-tab.html": {
+    "resources": [
+      "js/app.js",
+      "js/mui.min.js",
+      "css/mui.min.css",
+      "js/app.utils.js",
+      "js/config.js"
+    ],
+    "refer": [
+      "app/content4.html",
+      "app/template-header.html"
+    ]
+  },
+  "app/content3-tab.html": {
+    "resources": [
+      "js/app.js",
+      "js/mui.min.js",
+      "css/mui.min.css",
+      "js/app.utils.js",
+      "js/config.js"
+    ],
+    "refer": [
+      "app/content4.html",
+      "app/template-header.html",
+      "app/content3-quickOpen.html"
+    ]
+  },
+  "app/content3.html": {
+    "resources": [
+      "js/app.js",
+      "js/mui.min.js",
+      "css/mui.min.css",
+      "fonts/mui.ttf",
+      "js/app.utils.js",
+      "js/config.js",
+      "js/sea.js",
+      "js/main.js"
+    ]
+  },
+  "app/template-header.html": {
+    "resources": [
+      "app/content1.html",
+      "js/app.js",
+      "js/mui.min.js",
+      "css/mui.min.css",
+      "app/content2.html",
+      "app/content3.html",
+      "app/content4.html",
+      "app/content3-alone.html",
+      "js/app.utils.js",
+      "js/sea.js",
+      "js/main.js"
+    ],
+    "refer": [
+      "app/content1.html",
+      "app/content2.html",
+      "app/content3.html",
+      "app/content4.html",
+      "app/content3-alone.html"
+    ]
+  },
+  "app/content2.html": {
+    "resources": [
+      "js/app.js",
+      "js/mui.min.js",
+      "css/mui.min.css"
+    ]
+  },
+  "app/content4.html": {
+    "resources": [
+      "fonts/mui.ttf",
+      "js/app.js",
+      "js/mui.min.js",
+      "css/mui.min.css",
+      "js/app.utils.js",
+      "js/config.js"
+    ]
+  },
+  "app/content3-alone.html": {
+    "resources": [
+      "fonts/mui.ttf",
+      "js/app.js",
+      "js/mui.min.js",
+      "css/mui.min.css",
+      "js/app.utils.js",
+      "js/config.js"
+    ]
+  }
+}

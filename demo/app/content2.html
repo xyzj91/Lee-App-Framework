@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<style>
+			.index{ width: 100%; float: left; padding-top: 50px; text-align: center;}
+		</style>
+	</head>
+
+	<body>
+		<span class="index">底部进入动画</span>
+		<script src="../js/mui.min.js"></script>
+		<script type="text/javascript" src="../js/app.js" ></script>
+		<script type="text/javascript">
+			app.init({
+				initCbk:function(){
+					console.log("初始化完成112333");
+//						mui('.index')[0].addEventListener("tap",function(){
+//							var option = app.options;
+//							option.headerurl = "_www/app/template-header.html";
+//							option.url = "_www/app/content4.html";
+//							option.title = "测试";
+//							app._locationHref(option);
+//						});
+					},
+				lastpostCbk:function(data){
+						console.log("获取到上一个页面传值23333");
+						var options = app.getOptions();
+						options.show.aniShow = "slide-in-bottom";
+						setTimeout(function(){
+							app.showThisWebview();//手动显示当前webview
+						},500);
+					},
+			});
+			
+		</script>
+	</body>
+
+</html>

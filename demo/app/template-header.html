@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<style>
+			.index{ width: 100%; float: left; padding-top: 10px; text-align: center;}
+			.loader{ width: 100%; text-align: center; padding-top: 100px;}
+			.sp-title{ width: 100%; text-align: center; font-size: 13px;}
+		</style>
+	</head>
+
+	<body>
+		<span class="index">back      template</span>
+		<span class="index1">send child</span>
+		<div class="mui-content">
+			<div class="loader">
+				<span class="mui-spinner"></span>
+				<div class="sp-title">请稍等...</div>
+			</div>
+		</div>
+		<script type="text/javascript" src="../js/sea.js"></script>
+		<script type="text/javascript" src="../js/main.js" ></script>
+		<script type="text/javascript" charset="UTF-8">
+			seajs.use(["app"],function(app){
+				app.init({
+		            initCbk:function(){
+			            	mui('.index')[0].addEventListener("tap",function(){
+								mui.back();
+							});
+							mui('.index1')[0].addEventListener("tap",function(){
+								app.sendBroadToChild({test:"demo",type:"sendchild"});
+								mui.back();
+							});
+		                },
+		            lastpostCbk:function(){
+		                },
+		            eventCbk:function(){
+		                },
+		            broadCbk:function(){
+		                },
+		            dataRequestCbk:function(data){
+		            	app.printLog(data,true);
+						console.log("上一个页面接收到响应值");
+		                },          
+		        });
+				
+			});
+		
+		</script>
+	</body>
+
+</html>

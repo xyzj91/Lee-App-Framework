@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title>product-detail</title>
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="../css/iconfont.css" />
+		<link rel="stylesheet" type="text/css" href="../css/own.css" />
+		<style type="text/css">
+    		
+    		.mui-table-view-cell:after {
+    			left: 0px;
+    		}
+    		 .mui-table-view .mui-table-view-cell {
+    			background-color: white;
+    		}
+    
+    		.mui-slider-indicator .mui-active.mui-indicator {
+    			/*background-color: #41CEA9;*/
+    		}
+    		#headul:after {
+    			height: 0px;
+    		}
+    		#headul .mui-table-view-cell {
+    			padding-bottom: 0px;
+    			padding-top: 0px;
+    			margin-top: 0px;
+    			background-color: white;
+    		}
+    		#headul {
+    			margin-top: 10px;
+    			margin-bottom: 8px;
+    		}
+    		
+    		#headul .mui-table-view-cell:after {
+    			height: 0px;
+    		}
+    		
+    		.mui-table-cell .borderleft {
+    			height: 40%;
+    			border-left: 1px solid gray; 
+    			margin-left: 5px;
+    		}
+    		
+    		.mui-icon.iconfont {
+    			font-size: 1em;
+    			color: #41CEA9;
+    		}
+    		#headul .mui-table-view-cell.setbg {
+    			background-color: #f3fcfb;
+    		}
+    		#headul .mui-table-view-cell.setbg div {
+    			font-size: 0.7em;
+    			color: gray;
+    		}
+    		.mui-table-view-cell p.evaluateTitle {
+    			color:black;
+    			font-size: 1em;
+    		}
+    		
+    		.mui-table-view {
+    			margin-bottom: 10px;
+    		}
+    		
+    		span.evaluate {
+    			font-size: 0.68em;
+    			color: darkgray;
+    			border: 1px solid darkgray;
+    			word-break: nowrap;
+    			word-wrap: nowrap;
+    			border-radius: 2px;
+    			text-align: center;
+    		}
+    		.mui-table-view-cell .evaluaterHead img{
+    			background-color: darkgray;
+    			width: 2.5em; 
+    			max-width: 2.5em; 
+    			height: 2.5em;
+    			border:1px solid gray; 
+    			border-radius: 50%;
+    		}
+    		.mui-table-view-cell .evaluaterHead span {
+    			font-size: 0.9em;
+    			vertical-align: super;
+    		}
+    		
+    		.mui-table-view-cell .evaluteContent {
+    			font-size: 0.7em;
+    			line-height: 1.2em;
+    		}
+    		.mui-table-view-cell .evaluteMsg {
+    			font-size: 0.5em;
+    		}
+    		.mui-table-view-cell.moreEvaluate {
+    			text-align: center;
+    			padding-top: 8px;
+    			padding-bottom: 8px;
+    		}
+    		.mui-table-view-cell.moreEvaluate a {
+    			color: darkgray;
+    		}
+    		.mui-table .mui-col-xs-4 {
+    			font-size: 0.68em;
+    			color: darkgray;
+    		}
+    		.mui-table .mui-col-xs-6 {
+    			line-height: 1.1em;
+    			font-size: 0.8em;
+    		}
+    		.mui-table .mui-col-xs-6 .stroemsg {
+    			font-size: 0.5em;
+    			color: darkgray;
+    		}
+    		.mui-table .mui-col-xs-6  .lingBtn {
+    			font-size: 1em;
+    		}
+    		
+    		.mui-table-view.mui-grid-view .mui-table-view-cell .mui-media-body {
+    			margin-top: 2px;
+    			margin-bottom: 5px;
+    			height: auto;
+    		}
+    		
+    		.mui-table-view.mui-grid-view .mui-table-view-cell .mui-media-body p.mui-ellipsis-2 {
+    			font-size: 0.5em;
+    			line-height: 1.2em;
+    			white-space:pre;
+    			height: 2.3em;
+ 
+    		}
+    		.mui-table-view.mui-grid-view .mui-table-view-cell .mui-media-body p.price {
+    			font-size: 0.8em;
+    			color: #41CEA9;
+    		}
+    		body{ background: #007AFF;}
+    		
+    </style>
+	</head>
+
+	<body>
+		<div class="mui-content">
+			<div id="detailcontent" class="mui-content  own-content-padding">
+				无动画
+			</div>
+		</div>
+		
+		<script type="text/javascript" src="../js/mui.min.js" ></script>
+		<script type="text/javascript" src="../js/own.js" ></script>
+		<script type="text/javascript" src="../js/app.js" ></script>
+		<script type="text/javascript" src="js/app.utils.js" ></script>
+		<script type="text/javascript" src="js/config.js" ></script>
+		<script type="text/javascript" charset="UTF-8">
+			app.init({
+				initCbk:function(){
+					console.log("初始化完成112333");
+//						mui('.index')[0].addEventListener("tap",function(){
+//							var option = app.options;
+//							option.headerurl = "_www/app/template-header.html";
+//							option.url = "_www/app/content4.html";
+//							option.title = "测试";
+//							app._locationHref(option);
+//						});
+					},
+				lastpostCbk:function(){
+						console.log("获取到上一个页面传值23333");
+//						var options = app.options;
+//						options.show.aniShow = "slide-in-bottom";
+						setTimeout(function(){
+							app.showThisWebview();//手动显示当前webview
+						},500);
+					},
+			});
+		</script>
+	</body>
+
+</html>

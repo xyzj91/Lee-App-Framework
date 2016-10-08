@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<style>
+			.index{ width: 100%; float: left; padding-top: 50px; text-align: center;}
+		</style>
+	</head>
+
+	<body>
+		<span class="index">content1-tab</span>
+		<script src="../js/mui.min.js"></script>
+		<script type="text/javascript" src="../js/app.js" ></script>
+		<script type="text/javascript">
+			app.init(function(){
+				mui('.index')[0].addEventListener("tap",function(){
+					app.openWindow_communion("default","_www/app/content2.html");
+	//				alert("sdsd"+JSON.stringify(plus.webview.all().length));
+				});
+				app.getLastPageOption(function(){
+					alert("sdsd");
+				});
+			});
+			
+		</script>
+	</body>
+
+</html>

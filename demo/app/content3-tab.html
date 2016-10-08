@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<style>
+			.index{ width: 100%; float: left; padding-top: 50px; text-align: center;}
+		</style>
+	</head>
+
+	<body>
+		<span class="index">content3-tab</span>
+		<script src="../js/mui.min.js"></script>
+		<script type="text/javascript" src="../js/app.js" ></script>
+		<script type="text/javascript" src="../js/app.utils.js" ></script>
+		<script type="text/javascript" src="../js/config.js" ></script>
+		<script type="text/javascript">
+		app.init({
+			initCbk:function(){
+				mui('.index')[0].addEventListener("tap",function(){
+					var option = app.getOptions();
+//					option.id = "template1";
+					option.url = "_www/app/content3-quickOpen.html";
+					option.title = "测试";
+//					app.openWindow_communion(option);
+					app._locationHref(option);
+				});
+			},
+			lastpostCbk:function(){
+					console.error("sdsd");
+				},
+		});
+			
+		</script>
+	</body>
+
+</html>

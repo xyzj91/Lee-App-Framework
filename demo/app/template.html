@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<style>
+			.index{ width: 100%; float: left; padding-top: 10px; text-align: center;}
+		</style>
+	</head>
+
+	<body>
+		<span class="index">back      template</span>
+		<script src="../js/mui.min.js"></script>
+		<script type="text/javascript" src="../js/app.js" ></script>
+		<script type="text/javascript">
+			app.init(function(){
+				mui('.index')[0].addEventListener("tap",function(){
+					mui.back();
+				});
+				var contentWebview = null;
+				//重写muiBack方法
+				mui.back = function(){
+					app.ws.hide('auto');
+					setTimeout(function() {
+//						titleElem.className = 'mui-title mui-fadeout';
+//						titleElem.innerText = '';
+						if(contentWebview==null){
+							contentWebview = app.ws.children()[0];
+						}
+						contentWebview.hide("auto");  
+					}, 350);
+//					if(cbk){
+//						app._newRunCalbackForLast(cbk);//执行回调
+//					}
+				}
+			});
+		</script>
+	</body>
+
+</html>

@@ -1,0 +1,777 @@
+/**
+ * Lee APPFrame 核心模块 V3.0  BY:Alen
+ * Lee App框架 V3.0是一个基于MUI底层实现的一套底层JS框架，解决了市面上同类技术标准不统一，开发不规范，开发出来的产品性能
+ * 和体验差的问题。实现了功能标准化、业务抽象化。使开发人员可以更加专注的去实现页面效果，而不用太过于去考虑底层的实现。
+ * v1.1 功能点：封装了网络请求，封装了业务打开逻辑，封装了数据存储、封装了图像缓存、I18N。
+ * v2.0 功能点：重写页面传值以及子页面打开方法，使之更稳定。新增广播函数，可以向所有页面发送广播消息。新增页面显示、隐藏、加载完成、关闭四大事件。可通过广播监听这四个事件。
+ * v3.0 功能点：重新架构整个底层，使之更稳定并解决在Android5.0以上页面遮挡的问题。解决在页面加载时因为其他因素导致的等待框无法被自动关闭的BU
+ * G,新增加在IOS下默认使用WKWebview，使之可以兼容indexDB,将缓存存储方式修改为indexDB
+ **/
+var app = (function(ow) {
+//	页面初始化文件
+	var options={
+		preloades:true,//是否使用预加载方式打开页面
+		headerpanel:true,//启用父子页面 默认为true
+		headerurl:"",//父页面地址，仅在headerpanel为true时有效
+		bottompanel:false,//是否启用底部面板（一般不启用），仅在底部为特殊状态栏时启用 ，默认为false
+		bottomurl:"",//底部菜单地址，仅在bottompanel为true时有效
+		bottomStyles:{//底部菜单窗口属性，仅在bottompanel为true时有效
+			bottom:"0px",
+			height:"50px",
+		},
+		url:"",//子页面地址
+		id:"",//子页面ID
+		title:"",//标题
+		lastpageid:"",//上一个页面的ID
+		styles:{//子页面样式
+			top:"45px",
+			bottom:"51px",
+			hardwareAccelerated:false,//是否开启硬件加速
+			bounce:"vertical",//窗口回弹效果none表示没有反弹效果；vertical表示垂直方向有反弹效果；horizontal表示水平方向有反弹效果；all表示垂直和水平方向都有反弹效果。
+			decelerationRate:0.989,//滑动阻力系数，值越大速度越快 安卓下没有该属性，ios5+以上有
+			dock:"",//窗口停靠方式，子页面中有效 	可取值："top"，控件停靠则页面顶部；"bottom"，控件停靠在页面底部；"right"，控件停靠在页面右侧；"left"，控件停靠在页面左侧。
+			errorPage:"none",//窗口加载错误时跳转的页面地址（仅支持本地页面地址）。 设置为“none”则关闭跳转到错误页面功能，此时页面显示Webview默认的错误页面内容
+			kernel:"UIWebview",//设置IOS下的渲染内核 "WKWebview" - 在iOS8.0及以上系统使用WKWebview内核，低版本下仍然使用UIWebview内核； "UIWebview" - 在所有版本上都使用UIWebview内核。 默认值为“UIWebview”。 使用UKWebview内核会有更好的性能，但在功能上有些限制，目前已知的问题有： 1. 不支持设置cookie，即plus.navigator.setCookie() API无法使用； 2. 本地的HTML页面中的XHR不支持跨域访问，需使用plus.net.XMLHttpRequest来替换； 3. 不支持使用WebSQL，需使用indexDB来替换； 4. 不支持js原生混淆功能，需使用前端js混淆来替换。
+			render:"onscreen",//设置Android下的窗口渲染模式  "onscreen" - Webview窗口在屏幕区可见时渲染，不可见时不进行渲染，此时能减少内存使用量； "always" - Webview在任何时候都渲染，在内存较大的设备上使用，被遮挡的窗口在此中模式下显示的时候会有更流畅的效果。 默认值为"onscreen"。
+			scrollIndicator:"none",//窗口是否显示滚动条 vertical仅显示垂直滚动条"horizontal"：仅显示水平滚动条；	"all"：垂直和水平滚动条都显示
+		},
+		extras:{
+			lastpageid:"",
+		},//扩展传值
+		createNew:true,
+		show:{
+			autoShow:false,//自动显示
+			aniShow:"slide-in-right",//显示动画效果  "auto": (String 类型 )自动选择动画效果 "none": (String 类型 )无动画效果 "slide-in-right": (String 类型 )从右侧横向滑动效果 "slide-in-left": (String 类型 )从左侧横向滑动效果 "slide-in-top": (String 类型 )从上侧竖向滑动效果 "slide-in-bottom": (String 类型 )从下侧竖向滑动效果 "fade-in": (String 类型 )从透明到不透明逐渐显示效果 "zoom-out": (String 类型 )从小到大逐渐放大显示效果 "zoom-fade-out": (String 类型 )从小到大逐渐放大并且从透明到不透明逐渐显示效果 "pop-in": (String 类型 )从右侧平移入栈动画效果,
+			duration:150,//动画持续事件
+			extras:{//显示扩展函数
+				acceleration:true,//android下窗口动画加速
+			}
+		},
+				
+	};
+	var TEMPLATE = "templates";//全局webView
+	ow.LANG = "";//系统语言
+	var language,config;
+	var backButtonPress = 0;
+	ow.ws=null,ow.wo=null;
+	ow.templates = {};//全局webview
+	ow.lastpageid = "";//上一个页面ID
+	ow.LONGTOUCHEVENT = "longtouchevent";
+	ow.LONGTOUCHITEM = "longtouchimgitem";//图片长按
+	ow.LONGTOUCHITEM_OTHER = "longtouchitem";//其他内容长按
+	//全局页面4大事件回调
+	ow.LOADED = "onloaded";//页面加载完成事件
+	ow.SHOW = "onshow";//页面显示事件
+	ow.HIDE = "onhide";//页面加载完成事件
+	ow.CLOSE = "onclose";//页面关闭事件
+	ow.GETLASTPAGEOPTION = "getOption";//获取上一个页面参数
+	ow.CONTENTLOADED = "contentloaded";//子页面加载完成参数
+	//全局页面广播事件（模拟安卓广播事件）
+	ow.BROADCAST = "onbroadcast";//页面广播事件（可向任何一个监听页面广播消息）
+	ow.REQUESTDATA = "requestdata";//传值到上一个页面事件
+    
+    //获取全局样式函数，这样写是为了防止全局属性被覆盖
+    ow.getOptions = function(){
+    	return JSON.parse(JSON.stringify(options));
+    }
+    
+    //数据存储与读取 （用于实现数据的永久存储）
+    ow.dataStorage = function(key,value){
+    	if(!key){
+    		alert("key 不能为空");
+    	}
+    	if(typeof(value)!=="undefined"){
+    		if(typeof value!="string"){
+    			value = JSON.stringify(value);
+    		}
+    		plus.storage.setItem(key,value);
+    		return true;
+    	}else{
+    		return plus.storage.getItem(key);
+    	}
+    }
+     //数据存储与读取 (sessionStorage 信息只在当前页面有效，跨页面则被清空)
+    ow.sessionStorage = function(key,value){
+    	if(typeof(value)!=="undefined"){
+    		sessionStorage.setItem(key,value);
+    		return true;
+    	}else{
+    		return sessionStorage.getItem(key);
+    	}
+    }
+    
+    /**
+     * 取得url中页面名称
+     * @param {String} url
+     */
+    ow.getUrlName = function(url){
+    	try{
+    		url = url.split("/");
+	    	url = url[url.length-1];
+	    	url = url.split(".");
+	    	return url[0];
+    	}catch(e){
+    		
+    	}
+    }
+    
+     //设置全局webview
+    ow.setTemp = function(name,tempObj){
+    	if(!name||!tempObj){
+    		console.error("设置webview 错误，请检查参数");
+    	}else{
+    		var temp = app.dataStorage(TEMPLATE);//先全部取出所有webview
+    		if(temp){
+    			temp = JSON.parse(temp);
+    			temp[name] = tempObj;//将数据插入
+    		}else{
+    			temp={};
+    			temp[name] = tempObj;//将数据插入
+    		}
+    		app.dataStorage(TEMPLATE,JSON.stringify(temp));//将数据存储起来
+    	}
+    }
+    //获取全局webview
+    ow.getTemp = function(name){
+    		var temp = app.dataStorage(TEMPLATE);// 获取所有
+	    	if(!name){
+	    		console.error("webview name is not null");
+	    		return null;
+	    	}
+	    	if(!temp){
+	    		console.error("webview  is  null");
+	    		return null;
+	    	}else{
+	    		temp = JSON.parse(temp);
+	    		var tempWebview = temp[name];
+		    	if(tempWebview){
+		    		return getWebview(tempWebview);
+		    	}else{
+		    		return null;
+		    	}
+	    	}
+	    	
+    }
+    //根据webview数组取出真实对象并返回
+    getWebview = function(tempWebview){ 
+    	if(tempWebview.header){
+    		tempWebview.header = ow.getWebviewByid(tempWebview.header);
+    	}
+    	if(tempWebview.content){
+    		tempWebview.content = ow.getWebviewByid(tempWebview.content);
+    	}
+    	if(tempWebview.bottom){
+    		tempWebview.bottom = ow.getWebviewByid(tempWebview.bottom);
+    	}
+    	if(!tempWebview.header&&!tempWebview.content){//如果真实WEBVIEW对象不存在，则返回空
+    		return null;
+    	}
+    	return tempWebview;
+    }
+    //根据ID获取webview
+    ow.getWebviewByid = function(id){
+    	return plus.webview.getWebviewById(id);
+    }
+    
+    /**
+     * 获取模版对象 
+     * @param {Json} options参数
+     */
+	ow.getTemplate = function(options) {
+		var name = options.id;
+		var template = ow.getTemp(name);
+		var headerWebview,contentwebview,bottomwebview;
+		var creates = template?true:false;
+		creates = creates?template.content:false;
+		template=template?template:{};
+		template['name']=name;
+		if(!options.preloades){//如果不是预加载页面，暂时只支持非父子页面立即加载
+			if(options.url){//子页面内容
+				contentwebview = plus.webview.getWebviewById(name+"-content");
+				if(!contentwebview){//如果webview不存在，则创建
+					contentwebview = mui.openWindow({
+						id:name+"content",
+						url:options.url,
+						styles:options.styles,
+						extras: {
+							mType: 'content',
+							preload:true//现载页面强制设置为预加载属性，不然在back时会被close而出现白屏
+						}
+					});
+				}
+				template['content']=contentwebview.id;
+			}else{
+				console.error("url is null");
+				return;
+			}
+			template['newcreate']=true;
+			ow.templates[name] = template;
+			ow.setTemp(name,template);
+			template = ow.getTemp(name);
+			return template;
+		}
+		
+		if(!creates){//新创建
+			if(options.headerpanel){//启用父子模版
+				if(options.headerurl){
+					headerWebview = plus.webview.getWebviewById(name+"-header");
+					if(!headerWebview){//如果webview不存在，则创建
+						headerWebview = mui.preload({
+							id:name+"-header",
+							url:options.headerurl,
+							styles:{
+								top:'0px',
+								bottom:'0px',
+								popGesture: "hide",//设置侧滑返回事件
+							},
+							extras: {
+								mType: 'header',
+								newCreate:true,
+							}
+						});
+					}
+				}else{
+					console.error("headerurl is not null");
+					return;
+				}
+				headerWebview.hide();//隐藏头部webview
+				template['header']=headerWebview.id;
+			}
+			if(options.bottompanel){//启用底部菜单webview
+				if(options.bottomurl){
+					bottomwebview = plus.webview.getWebviewById(name+"-bottom");
+					if(!bottomwebview){//如果webview不存在，则创建
+						bottomwebview = mui.preload({
+							id:name+"-bottom",
+							url:options.bottomurl,
+							styles:options.bottomStyles,
+							extras: {
+								mType: 'bottom',
+								newCreate:true,
+							}
+						});
+					}
+				}else{
+					console.error("bottomurl is not null");
+					return;
+				}
+				bottomwebview.hide();//隐藏尾部webview
+				headerWebview.append(bottomwebview);
+				template['bottom']=bottomwebview.id;
+			}
+			//子页面
+			contentwebview = plus.webview.getWebviewById(name+"-content");
+			if(!contentwebview){//如果webview不存在，则创建
+				contentwebview = mui.preload({
+					id:name+"-content",
+					url:options.url,
+					styles:options.styles,
+					extras: {
+						mType: 'content',
+						newCreate:true,
+					}
+				});
+			}else{
+				app.printLog(name+"-content 已经存在");
+			}
+			contentwebview.hide();//隐藏子页面
+			contentwebview.addEventListener('loaded',function(){
+				setTimeout(function(){
+					if(options.show.autoShow){
+						contentwebview.show();
+					}
+				},200);
+			},false);
+			if(headerWebview){
+				//父页面隐藏的时候子页面也隐藏
+				headerWebview.addEventListener('hide',function(){
+					contentwebview.hide();
+				},false);
+				headerWebview.append(contentwebview);
+			}
+			template['content']=contentwebview.id;
+				
+			ow.templates[name] = template;
+			ow.setTemp(name,template);
+			template = ow.getTemp(name);
+		}else{
+				if(template.header){
+					template.header.newCreate = false;
+				}
+				if(template.bottom){
+					template.bottom.newCreate = false;
+				}
+				if(template.content){
+					template.content.newCreate = false;
+				}
+			console.log("模版存在");
+			console.log(name+"已经存在，不用新创建webview对象，直接返回已存在对象");
+		}
+		return template;
+	};
+	
+	
+	/*
+	 * 添加webview的四大事件监听  首先取消事件监听，防止事件被重复监听
+	 */
+	addWebViewEvent = function(webview,cbk){
+			webview.onloaded = function(){
+				console.log(webview.id + "页面加载完成");
+				cbk(ow.LOADED);
+			}
+			webview.onloading = function(){
+				console.log(webview.id + "页面加载中");
+				cbk("loading");
+			}
+	}
+	//向所有页面发送广播消息  type消息类型 附加参数
+	ow.sendBroadCastToAll = function(type,ext){
+		if(!type){
+			return;
+		}
+		var temp = app.dataStorage(TEMPLATE);// 获取所有webview 记录
+		var webviewObj = null;
+    	if(!temp){
+    		console.error("webview  is not  null");
+    		return null;
+    	}else{
+    		temp = JSON.parse(temp);
+    		mui.each(temp,function(k,v){
+    			ow.sendBroadCastByname(v,type,ext);//发送消息到指定页面
+    		});
+    	}
+	}
+	//向指定webview发送广播消息 web webview type 事件类型 ext 传参
+	ow.sendBroadCastByname = function(web,type,ext){
+		var webviewObj = getWebview(web);//根据json对象取得webview真实对象
+		if(webviewObj){
+			var options = {type:type,ext:ext}
+			try{
+				if(webviewObj.header){
+					ow.sendBroadCastByWebview(webviewObj.header,ow.BROADCAST,options);//发送广播消息到头部
+					console.log("发送消息到头部成功"+webviewObj.name);
+				}
+				if(webviewObj.content){
+					ow.sendBroadCastByWebview(webviewObj.content,ow.BROADCAST,options);//发送广播消息到子页面
+					console.log("发送消息到子页面成功"+webviewObj.name);
+				}
+				if(webviewObj.bottom){
+					ow.sendBroadCastByWebview(webviewObj.bottom,ow.BROADCAST,options);//发送广播消息到子页面
+					console.log("发送消息到子页面成功"+webviewObj.name);
+				}
+			}catch(e){
+				console.error(type+" 广播消息发送失败"+JSON.stringify(k));
+			}
+		}else{
+			console.error("广播发送失败 "+name+" webview 不存在");
+		}
+	}
+	//向指定webview发送事件
+	ow.sendBroadCastByWebview = function(webview,broadCast,option){
+		mui.fire(webview,broadCast,option);//发送事件
+	}
+	//监听广播 广播类型，回调
+	ow.BroadCastListener = function(type,cbk){
+		if(!type||!cbk){
+			console.error("参数错误，广播消息监听失败");
+			return;
+		}
+		//监听事件 //(消息类型，传参)
+		window.addEventListener(type, function(e) {
+			cbk(e.detail.type,e.detail.ext);
+		});
+	}
+	
+	/**
+	 *获取webView 
+	 * @param {String} name
+	 */
+	ow.getWebObjByName = function(name){
+		return ow.getTemp(name);
+	}
+    //取得或者创建webview对象 @param {Json} options参数
+   ow._getWebObj = function(options){
+   		if(!options){
+   			console.error("options is not null");
+   			return;
+   		}
+		var name = options.id?options.id:ow.getUrlName(options.url);//取得页面名称 页面ID为空时取URL名称
+		var temp = {};
+		if(!name){
+			console.error("name is not null");
+			return;
+		}
+		if(!options.id){//若ID为空则取页面名称作为ID
+			options.id = name;
+		}
+    	temp['name'] = name;
+    	//通过页面名称判断打开方式
+    	if(name.indexOf("quickOpen")>0){//不使用父子模版方打开,立即打开页面，暂时只支持独立页面方式（现加载模式）
+    		options.preloades = false;//关闭预加载
+    		options.headerpanel = false;//关闭父子页面
+    		options.bottompanel = false;//关闭底部独立菜单模式
+    		options.styles.top = "0px";
+    		options.styles.bottom = "0px";
+    	}else if(name.indexOf("alone")>0){//使用无头尾方式打开（预加载模式）
+    		options.preloades = true;//开启预加载
+    		options.headerpanel = false;//关闭父子页面
+    		options.bottompanel = false;//关闭底部独立菜单模式
+    		options.styles.top = "0px";
+    		options.styles.bottom = "0px";
+    	}else if(name.indexOf("need-header")>0){//使用有头无尾方式打开（预加载模式）
+    		options.preloades = true;//开启预加载
+    		options.headerpanel = true;//关闭父子页面
+    		options.bottompanel = false;//关闭底部独立菜单模式
+    		options.styles.bottom = "0px";
+    	}else{//默认使用有头有尾方式打开(预加载模式)
+    		options.preloades = true;//开启预加载
+    		options.headerpanel = true;//开启父子页面
+    	}
+    	//创建或获取webview对象
+    	var templates = ow.getTemplate(options);
+    	
+    	if(templates.header){
+    		templates.header.hide();
+	    	temp['header'] = templates.header;
+    	}
+    	
+    	if(templates.content){
+    		templates.content.hide();
+	    	temp['content'] = templates.content;
+    	}
+    	
+    	if(templates.bottom){
+    		templates.bottom.hide();
+	    	temp['bottom'] = templates.bottom;
+    	}
+		return temp;
+   }
+   
+    /**
+     *新增加打开新页面函数 
+     * @param {Json} options 页面打开参数
+     */
+    var run = true;//限制字段，防止被重复点击(500毫秒内只能点击一次)
+    ow._locationHref = function(options){//TODO
+    	if(run){
+    		run = false;
+	    	if(!options){
+	    		console.error("options is not null");
+	    		return;
+	    	}
+	    	options['lastpageid'] = app.ws.id;//当前页面ID
+	    	/**********************第一步，获取到页面webview对象*********************/
+	    	var template = ow._getWebObj(options);//获取webview模版对象
+	    	/**********************第二步，发送事件到子页面****************************/
+	    	if(template.content){
+	    		template.content.hide();//先将子页面隐藏之
+	    	}
+	    	/***************************头部******************************/
+	    	//监听webview事件
+	    	if(template.header){
+	    		if(template.header.newCreate){//如果是新创建
+		    		addWebViewEvent(template.header,function(type){
+		    			if(type==ow.LOADED){
+		    				setTimeout(function(){
+		    					ow.sendBroadCastByWebview(template.header,ow.GETLASTPAGEOPTION,options);
+		    				},100);
+		    			}
+		    		});
+		    	}else{
+	    			ow.sendBroadCastByWebview(template.header,ow.GETLASTPAGEOPTION,options);
+		    	}
+		    	if(options.show.autoShow){
+		    		template.header.show(options.show.aniShow,options.show.duration,"",options.show.extras);
+		    	}else{
+		    		console.log("自动显示被关闭，请使用app.showThisWebview()函数调用页面显示");
+		    	}
+	    	}
+	    /************************底部菜单*******************************/	
+	    	if(template.bottom){
+	    		if(template.bottom.newCreate){//如果是新创建
+		    		addWebViewEvent(template.bottom,function(type){
+		    			if(type==ow.LOADED){
+		    				setTimeout(function(){
+		    					ow.sendBroadCastByWebview(template.bottom,ow.GETLASTPAGEOPTION,options);
+		    				},100);
+		    			}
+		    		});
+		    	}else{
+		    		ow.sendBroadCastByWebview(template.bottom,ow.GETLASTPAGEOPTION,options);
+		    	}
+	    	}
+	    /****************************中间内容******************************/	
+	    	if(template.content){
+	    		if(template.content.newCreate){//如果是新创建
+	    				addWebViewEvent(template.content,function(type){
+			    			if(type==ow.LOADED){
+			    				setTimeout(function(){
+			    					console.log("222333366656565");
+			    					ow.sendBroadCastByWebview(template.content,ow.GETLASTPAGEOPTION,options);
+			    				},100);
+			    			}
+			    		});
+		    	}else{
+		    		//如果是加载过的页面则直接发送通知到页面
+		    		if(ow.getUrlName(options.url)==ow.getUrlName(template.content.getURL())){
+		    			console.log("页面被加载过，直接发送通知");
+		    			ow.sendBroadCastByWebview(template.content,ow.GETLASTPAGEOPTION,options);
+		    		}
+		    		
+		    		//在安卓下当前页面未加载过url,且当前页面是非父子模版的情况下则自动加载页面
+					if(mui.os.android&&parseFloat(mui.os.version) >= 4.4){
+	    				if(template.content.getURL()=="null"&&!options.headerpanel){
+	    					template.content.loadURL(options.url);
+	    					var sendbroad = true;//广播发送，防止被重复执行
+			    			template.content.onloaded = function(){
+			    				console.log("页面加载完成，发送广播到子页面中"+sendbroad);
+			    				if(sendbroad){
+			    					sendbroad = false;
+			    					setTimeout(function(){
+			    						ow.sendBroadCastByWebview(template.content,ow.GETLASTPAGEOPTION,options);
+				    				},100);
+			    				}else{
+		    						console.error("已拦截重复发送的广播");
+		    					}
+			    			};
+	    				}
+	    			}	
+	    			
+		    	}
+		    	//如果是在IOS下或者是在安卓4.4以下，在此处进行子页面处理
+		    	if(mui.os.ios||(mui.os.android&&parseFloat(mui.os.version)<4.4)){
+		    		var url = options.url;
+		    		//如果之前加载过该页面
+		    		if(ow.getUrlName(url)==ow.getUrlName(template.content.getURL())){
+		    			if(options.show.autoShow){//如果是自动显示
+			    			if(options.headerpanel){//如果是在有父模版情况下直接显示，否则使用动画显示
+			    				template.content.show();
+			    			}else{
+			    				template.content.show(options.show.aniShow,options.show.duration,"",options.show.extras);
+			    			}
+		    			}
+		    		}else{
+		    			console.log("新地址，重新加载URL");
+		    			template.content.loadURL(url);//子页面加载URL
+		    			var sendbroad = true;//广播发送，防止被重复执行
+		    			template.content.onloaded = function(){
+		    				console.log("页面加载完成，发送广播到子页面中"+sendbroad);
+		    				if(sendbroad){
+		    					sendbroad = false;
+		    					setTimeout(function(){
+		    						ow.sendBroadCastByWebview(template.content,ow.GETLASTPAGEOPTION,options);
+			    				},100);
+		    				}else{
+	    						console.error("已拦截重复发送的广播");
+	    					}
+		    			};
+		    		}
+		    		
+		    	}
+		    	if(options.show.autoShow){//如果是自动显示
+	    			if(!template.header){
+		    			template.content.show(options.show.aniShow,options.show.duration,"",options.show.extras);
+	    			}
+		    	}
+		    	
+	    	}
+	    	setTimeout(function(){
+	    		run = true;
+	    	},500);
+	    	return template;
+	    }else{
+	    	console.error("请不要重复点击");
+	    }
+    }
+    /**
+     *获取从上一个页面传过来的值，配合新的打开页面方式使用 
+     * @param {Object} cbk 回调函数
+     */
+    ow.getLastPageOption = function(cbk){
+    	window.addEventListener("getOption",function(e){
+    		console.log("获取上一个页面传过来："+JSON.stringify(e.detail));
+    		cbk(e.detail);
+		});
+    }
+    
+    //显示当前页面(用于当autoshow设置为false时显示页面用)
+  	ow.showThisWebview = function(options){
+  		if(!options){//如果不设置则清除动画
+  			ow.ws.show("none");
+  			return;
+  		}
+  		ow.ws.show(options.show.aniShow,options.duration);
+  	}
+  	
+  	ow.setlanguage_config = function(lang,conf){
+  		language = lang;
+  		config = conf;
+  	}
+  	
+    /**
+     * MUI H5+API统一初始化函数 
+     * @param {JSON} initConfig 页面初始化配置文件
+     * 初始化配置
+	 *   ow.initConfig = {
+	 *   	initCbk:"",//初始化完成回调(整个页面的生命周期中只会执行一次)
+	 *   	lastpostCbk:"",//参数传递回调（参数过来时会调起该方法，页面生命周期中会调用多次）
+	 *   	eventCbk:"",//页面三大事件回调，三大事件分别是（显示，隐藏，关闭）
+	 *   	broadCbk:"",//广播回调事件，当页面中收到自定义发送的广播消息时会调起该事件
+	 *   	dataRequestCbk:"",//下一个页面传递参数到上一个页面，上一个页面中的回调事件
+	 *   };
+     */
+    
+	ow.init=function(initConfig){
+		mui.init();//初始化MUI框架
+		if (mui.os.android) {
+			//Android平台暂时使用slide-in-right动画
+			if(parseFloat(mui.os.version)<4.4){
+				animation_in = "slide-in-right";
+			}
+		}
+		mui.plusReady(function(){//初始化5+API
+			plus.screen.lockOrientation("portrait-primary");//仅支持竖屏显示
+			//获取当前窗口对象
+			ow.ws = plus.webview.currentWebview();
+			//当前webview窗口的创建者
+			ow.wo = ow.ws.opener();
+			
+			//页面三大事件监听回调
+			try{
+				if(typeof(initConfig.eventCbk)!="undefined"){
+					addWebViewEvent(ow.ws,initConfig.eventCbk);
+				}
+			}catch(e){}
+			
+			//自定义广播监听回调
+			try{
+				if(typeof(initConfig.broadCbk)!="undefined"){
+					ow.BroadCastListener(ow.BROADCAST,initConfig.broadCbk);
+				}
+			}catch(e){}
+			//下一个页面传值到上一个页面回调监听
+			try{
+				if(initConfig.dataRequestCbk){
+					window.addEventListener(ow.REQUESTDATA,function(e){
+						initConfig.dataRequestCbk(e.detail);
+					},false);
+				}
+			}catch(e){}
+			if(ow.ws.id.indexOf("header")>0){//如果是头部页面
+				//添加子页面初始化完成监听事件
+				window.addEventListener(ow.CONTENTLOADED, function(e) {
+					var data = e.detail;
+					if(mui.os.android&&parseFloat(mui.os.version) >= 4.4){//自动显示在安卓4.4以上的实现方法
+						var contentwebview = plus.webview.getWebviewById(data.options.id);
+						if(contentwebview==null){
+							contentwebview = ow.ws.children()[0];
+						}
+						if(data.options.show.autoShow){//如果是自动显示
+							ow.ws.show(data.options.show.aniShow,data.options.show.duration,"",data.options.show.extras);//显示头部
+						}
+					}
+				});
+			}
+			//取得上一个页面过来的参数(每次加载都会触发)
+			app.getLastPageOption(function(data){
+				ow.lastpageid = data.lastpageid;
+				if(ow.ws.id.indexOf("header")<0){//如果是子页面
+					var parent = ow.ws.parent();//获取到当前webview的父webview
+					if(parent){//如果父页面存在则发送初始化显示通知到父页面
+						ow.sendBroadCastByWebview(parent,ow.CONTENTLOADED,{id:ow.ws.id,options:data});//发送页面加载完成事件到父页面
+					}else{//如果父页面不存在则子页面自己解决初始化操作
+						if(mui.os.android&&parseFloat(mui.os.version) >= 4.4){//自动显示在安卓4.4以上的实现方法
+							var contentwebview = ow.ws;
+							if(ow.getUrlName(contentwebview.getURL()) == ow.getUrlName(data.url)){
+								contentwebview.show();
+							}else{
+								console.log("加载新地址"+data.url);
+								contentwebview.loadURL(data.url);
+							}
+							if(data.show.autoShow){//如果是自动显示
+								ow.ws.show(data.show.aniShow,data.show.duration,"",data.show.extras);//显示头部
+							}
+						}
+					}
+				}else{//如果是头部，显示之
+					if(mui.os.android&&parseFloat(mui.os.version) >= 4.4){//在安卓4.4以上初始化子页面操作放到父页面实现方法
+						var contentwebview = plus.webview.getWebviewById(data.id+"-content");
+						//如果之前已经加载过该地址则直接显示
+						if(ow.getUrlName(contentwebview.getURL()) == ow.getUrlName(data.url)){
+							contentwebview.show();
+						}else{
+							console.log("加载新地址"+data.url);
+							contentwebview.loadURL(data.url);
+							var sendbroad = true;//广播发送，防止被重复执行
+			    			contentwebview.onloaded = function(){
+			    				console.log("页面加载完成，发送广播到子页面中"+sendbroad);
+			    				if(sendbroad){
+			    					sendbroad = false;
+			    					setTimeout(function(){
+			    						ow.sendBroadCastByWebview(contentwebview,ow.GETLASTPAGEOPTION,data);
+				    				},100);
+			    				}else{
+		    						console.error("已拦截重复发送的广播");
+		    					}
+			    			};
+						}
+					}
+					ow.ws.show(data.show.aniShow,data.show.duration,"",data.show.extras);
+				}
+				//页面传值事件回调函数
+				if(typeof(initConfig.lastpostCbk)!="undefined"){
+					initConfig.lastpostCbk(data);
+				}else{
+					console.error("lastpostCbk is not null");
+				}
+			});
+			//I18N语言国际化
+			try{
+				switch (plus.os.language){ 
+					case 'zh':
+					alert(JSON.stringify("language"));
+						ow.LANG = language['zh'];//设置操作语言
+						break;
+					case 'en':
+						ow.LANG = language['en'];//设置操作语言
+						break;	
+					default:
+						ow.LANG = language['zh'];//设置操作语言
+						break;
+				}
+			}catch(e){
+				console.error("please input config.js");
+			}
+			
+			//页面初始化事件回调
+			try{
+				if(typeof(initConfig.initCbk)!="undefined"){
+					initConfig.initCbk();//初始化完成回调
+				}else{
+					console.error("initCbk is not null");
+				}
+			}catch(e){}
+		});
+	}
+	
+	return ow;
+})(window.app = {});
+/**
+ * 兼容 AMD 模块
+ **/
+if (typeof define === 'function' && define.amd) {
+	define('app', ["mui","apputils","config","language"], function() {
+		mui.extend(app,apputils);//合并对象
+		return app;
+	});
+}
+/**
+ *兼容CMD 模块 
+ */
+if (typeof define === 'function' && define.cmd) {
+	define('app', ["mui","utils","config","language"], function() {
+		app.setlanguage_config(language,config);
+		mui.extend(app,utils);//合并对象
+		return app;
+	});
+}
